@@ -71,24 +71,41 @@ The broadcast representation of an FIR filter is inherently pipelined. It also u
 
 ![graph](./Pictures/Drawings/broadcast_fir_noFG.PNG)
 
-<h3>4. Broadcast Form with Finegrain Pipelining</h3>
+<h3>4. Broadcast Form with Fine-grained Pipelining</h3>
 
 Supports additional, 1 stage fine-grained pipelining between adders and multipliers.
 
 ![graph](./Pictures/Drawings/broadcast_fir.PNG)
 
-<h3>4. Symmetric Broadcast Form</h3>
+<h3>5. Symmetric Broadcast Form</h3>
 
-An equiripple low-pass FIR filter is symmetric around the y-axis, i.e., `h[n] == h[FILTER_SIZE-n-1]`. This means that the results of multiplications, `mul` are also symmetric around the center of the broadcast FIR. We can use this symmetry to eliminate half of the redundant FIRs.
+An equiripple low-pass FIR filter is symmetric around the y-axis, i.e., `h[n] == h[FILTER_SIZE-n-1]`. This means that the results of multiplications are also symmetric around the center of the broadcast FIR. We can use this symmetry to eliminate half of the redundant FIRs.
+
+The block diagram of a modified broadcast FIR is shown below:
 
 ![graph](./Pictures/Drawings/broadcast_fir_symmetric.PNG)
 
 The symmetry exploitation only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
 
-<h3>5. Symmetric Broadcast Form</h3>
+<h3>6. L2 Parallel Form</h3>
 
+The L2 parallel form is the reduced-complexity parallel implementation of the given filter. It employs filter decomposition and clever recombination to achieve a parallel implementation capable of _2x_ throughput of the broadcast form, while using around _1.5x_ filter hardware resources.
 
+One feature of note: The L2 parallel design uses two clocks; one for processing, and one for serialization/de-serialization of inputs and outputs. The ser-des clock has twice the frequency to keep the filter fed at all times.
 
+Below is the block-diagram I used as a reference to implement the L2 parallel design:
+
+![graph](./Pictures/Drawings/L2.PNG)
+
+<h3>6. L3 Parallel Form</h3>
+
+The L3 frequency works on essentially on the same principle as L3. It can give _3x_ throughput while using _2x_ filter resources (The L3 implementation has 6 filters, with each having a length of 1/3 of the original).
+
+The L3 system is also fed using a _3x_ faster clock that is used for serialization and de-serialization of the incoming/outgoing data. The internal core works in parallel at a slower clock.
+
+Below is the block-diagram I used as a reference to implement the L2 parallel design:
+
+![graph](./Pictures/Drawings/L3.PNG)
 
 <h2>Testbench Simulation Results</h2>
 
