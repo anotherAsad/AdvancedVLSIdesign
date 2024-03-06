@@ -157,10 +157,9 @@ This waveform shows the response of all the different FIR implementations when a
 
 To show the veracity of implementations, the analog representation of the filter responses is given below. The input sample is a digital impulse. The outputs of 3 FIRs (broadcast non-parallel, L2 parallel and L3 parallel) are shown in violet, orange and green.
 
-As can be seen, all outputs are $sinc$ functions, which correspond to a $rect$ in the frequency domain, i.e. a **Low-pass filter**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
-
-
 ![graph](./Pictures/GTKwave/Analog.PNG)
+
+As can be seen, all outputs are $sinc$ functions, which correspond to a $rect$ in the frequency domain, i.e. a **Low-pass filter**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
@@ -217,10 +216,27 @@ I have been using the following steps to compile my FIR implementations:
 From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
 
 1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock down by 2ns to meet timing requirements.
-2. Use `Design -> Report Area` to generate area report. Are is reported in terms of cells used.
+2. Use `Design -> Report Area` to generate area report. Area is reported in terms of cells used.
 3. Use `Design -> Report Power` to generate power estimation report.
 
 <h2>Post-synthesis Timing and Resource/Power Usage Reports</h2>
+
+Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show the **screenshots** of only two designs here. For the rest, I will summarize the results in a table at the end of this section.
+
+<h3>Broadcast form FIR reports</h3>
+
+<h4>Timing Report:</h4>
+
+![graph](./Pictures/SynopsysDesignCompiler/Broadcast/TimingReport.PNG)
+
+<h4>Area Report:</h4>
+
+![graph](./Pictures/SynopsysDesignCompiler/Broadcast/AreaReport.PNG)
+
+<h4>Power Report:</h4>
+
+![graph](./Pictures/SynopsysDesignCompiler/Broadcast/PowerReport.PNG)
+
 
 
 <h2>Conclusion</h2>
