@@ -51,7 +51,7 @@ Given below are the design block diagrams of different FIR implementations:
 
 <h3>1. Direct Form</h3>
 
-This is the most naive form, derived from the convolution expression $$x(t) \circledast h(t) &= y(t)$$. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
+This is the most naive form, derived from the convolution expression $`x(t) \circledast h(t) &= y(t)`$. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
 
 ![graph](./Pictures/Drawings/DirectForm_Original.PNG)
 
