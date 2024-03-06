@@ -41,6 +41,18 @@ The MATLAB script in the file `code.m` was used to generate the filter, quantize
 
 One could think of many ways to implement FIR filters in hardware. I have implemented our FIR filter in the following flavors:
 
-1. Direct Form: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
-2. Pipelined Direct Form: **
+1. **Direct Form**: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
+2. **Pipelined Direct Form**: _The adder from the above design is pipelined: It is broken down logarithmically, with every further stage requiring half or so number of adders than the last one._
+3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
+4. **Pipelined Broadcast Form**: _The multipliers in broadcast form are finegrain pipelined._
+5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around x-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output. This only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters are not symmetric._
+
+<h2>Testbench Simulation Results</h2>
+
+<h2>Synthesis using Synopsis Design Compiler</h2>
+
+<h2>Post-synthesis timing and resource/power usage reports</h2>
+
+<h2>Conclusion</h2>
+
 
