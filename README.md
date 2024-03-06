@@ -243,7 +243,11 @@ Total cell area is 142251 units. Net area in mm^2 is undefined, because I haven'
 
 Estimated power consumption is around $4 mW$. Of which, around $3.274 mW$ are accounted for as dynamic power consumption.
 
-<h3>Comparison Table of Different Implementations</h3>
+<h3>Comparison Table for Different Implementations</h3>
+
+Given below is a table that compares the timing, power and area reports for all our designs:
+
+![graph](./Pictures/SynopsysDesignCompiler/ReportTable.PNG)
 
 
 
