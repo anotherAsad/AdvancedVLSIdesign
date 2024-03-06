@@ -44,14 +44,14 @@ One could think of many ways to implement FIR filters in hardware. I have implem
 1. **Direct Form**: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
 2. **Pipelined Direct Form**: _The adder from the above design is pipelined: It is broken down logarithmically, with every further stage requiring half or so number of adders than the last one._
 3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
-4. **PBroadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
-5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around x-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output. This only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters are not symmetric._
+4. **Broadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
+5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around y-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
 
 Given below are the design block diagrams of different FIR implementations:
 
 <h3>1. Direct Form</h3>
 
-This is the most naive form, derived from the convolution expression ```math x(t) \circledast h(t) &= y(t)```. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
+This is the most naive form, derived from the convolution expression of an FIR. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
 
 ![graph](./Pictures/Drawings/DirectForm_Original.PNG)
 
@@ -77,10 +77,15 @@ Supports additional, 1 stage fine-grained pipelining between adders and multipli
 
 ![graph](./Pictures/Drawings/broadcast_fir.PNG)
 
-<h3>Symmetric Broadcast Form</h3>
+<h3>4. Symmetric Broadcast Form</h3>
 
-broadcast_fir_symmetric
+An equiripple low-pass FIR filter is symmetric around the y-axis, i.e., `h[n] == h[FILTER_SIZE-n-1]`. This means that the results of multiplications, `mul` are also symmetric around the center of the broadcast FIR. We can use this symmetry to eliminate half of the redundant FIRs.
 
+![graph](./Pictures/Drawings/broadcast_fir_symmetric.PNG)
+
+The symmetry exploitation only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
+
+<h3>5. Symmetric Broadcast Form</h3>
 
 
 
