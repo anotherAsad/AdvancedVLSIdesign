@@ -178,7 +178,7 @@ I have been using the following steps to compile my FIR implementations:
 
 From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
 
-1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack is given as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock by 2ns to meet timing requirements.
+1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock by 2ns to meet timing requirements.
 2. Use `Design -> Report Area` to generate area report. Are is reported in terms of cells used.
 3. Use `Design -> Report Power` to generate power estimation report.
 
