@@ -19,7 +19,7 @@ For the given constraints, a decent equiripple design takes more than 100 taps. 
 
 The filter impulse response, extracted using `fvtool` utility in MATLAB, is given below:
 
-![graph](./Pictures/MATLAB/fvtool.png)
+![graph](./Pictures/MATLAB/fvtool.PNG)
 
 As can be seen, the response is that of an equiripple low-pass filter, with stop-band attenuation of the 80 dB, and requisite transition region width of 0.03 $\pi$ rad/sample.
 
@@ -31,6 +31,16 @@ The post quantization frequency response is given in the following figure:
 
 ![graph](./Pictures/MATLAB/freqz.PNG)
 
+The top figure shows the magnitude response, while the bottom figure shows the phase response. The *blue* traces represent the original/un-quantized filter response, wheras the *orange* trace shows the post quantization response. As can be, quantization impacts the stop-band: the response is not longer perfectly equiripple, and the stop-band attenuation is no more below the stipulated 80 dB - it now goes as high as around 74 dB.
 
 <h4></h4>
+
 The MATLAB script in the file `code.m` was used to generate the filter, quantize it, display the filter impulse response, and dump the filter coefficients for verilog consumption.
+
+<h2>FIR implementations in Verilog HDL</h2>
+
+One could think of many ways to implement FIR filters in hardware. I have implemented our FIR filter in the following flavors:
+
+1. Direct Form: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
+2. Pipelined Direct Form: **
+
