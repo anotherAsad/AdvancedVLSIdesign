@@ -116,9 +116,9 @@ The following points explain my rationale in choosing output bitwidths to avoid 
 - As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each.
 - Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
 - This means that every multiplication (product of 2 signed 16-bit numbers in $Q1.15$ format) will occupy 32-bit, and have a $Q2.30$ as format. Both of the two non-fractional bits represent sign bit. So we have 31 bits of information at the output of each multiplier.
-- Since we have a $204$ tap filter, we need to perform 204 additions on the multiplication outputs.
+- Since we have a $204$ tap filter, we need to perform $204$ additions on the multiplication outputs.
 - Every 2-operand addition has the potential to add 1 more bit to the output, given that both operands are max representable values in the given fixed-point format.
-- Since we can breakdown the 204 additions into a log-tree with 8 steps, we need 8 more fractional bits to avoid overflow. This is corroborated by the fact that since our max multiplication output is $~0.9999%, 204 such additions will result in something aroung $203.999$, which needs 8 non-fractional bits.
+- Since we can breakdown the $204$ additions into a log-tree with 8 steps, we need 8 more fractional bits to avoid overflow. This is corroborated by the fact that since our max multiplication output is $~0.9999%, 204 such additions will result in something around $203.999$, which needs 8 non-fractional bits.
 - So to avoid overflow, the final adder output must have at least 8 non-fractional bits.
 - In the interest of saving resources, we can drop the lower, fractional bits of multipliers, and translate the q-format from $Q2.30$ to $Q1.15$ at a moderate precision loss.
 - Then, the required final Q-format at the adder outputs is $Q9.15$, and needs 24-bits.
@@ -128,7 +128,62 @@ The following points explain my rationale in choosing output bitwidths to avoid 
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
+The Synopsys Design  Compiler is invoked by entering `design_vision` in the terminal. At the beginning of a new project, one must expose the cell libraries that are to be used for synthesis and compilation. A setup script written to achieve that looks like the one given below:
+
+```bash
+# Define the target logic library, symbol library,
+# and link libraries
+set_app_var target_library lsi_10k.db
+set_app_var symbol_library lsi_10k.sdb
+set_app_var synthetic_library dw_foundation.sldb
+set_app_var link_library "* $target_library $synthetic_library"
+set_app_var search_path [concat $search_path ./src]
+set_app_var designer "Asad"
+# Define aliases
+alias h history
+alias rc "report_constraint -all_violators"
+```
+
+This script sets up `lsi_10k` library as a source for cells and technology specific constraints. In actual synthesis, I have used `FreePDK-45`, which is a free, **45 nm** library available all over the internet.
+
+<h3>Steps for Design Compilation</h3>
+
+I have been using the following steps to compile my FIR implementations:
+
+1. Setup cell library (as stated above).
+2. Analyze the verilog module to be synthesized. Use `File -> Analyze`. It turns out that the design compiler supports a very strict subset of verilog. One may have to retailor the code at some spots to make it pass with design compiler.
+3. Elaborate the top module. Use `File -> Elaborate`.
+4. Specify timing and load capacitance constraints. I have batched my specifications in a `tcl` script given below:
+   ```tcl
+   link
+   uniquify
+   # specify clk
+   create_clock clk -period 42 -waveform {0 20}
+   set_clock_latency 0.3 clk
+   set_input_delay 2.0 -clock clk [all_inputs]
+   set_output_delay 1.65 -clock clk [all_outputs]
+   # specify clk_serial
+   create_clock clk_serial -period 14 -waveform {0 7}
+   set_clock_latency 0.3 clk_serial
+   set_input_delay 2.0 -clock clk_serial [all_inputs]
+   set_output_delay 1.65 -clock clk_serial [all_outputs]
+   # specify loads
+   set_load 0.1 [all_outputs]
+   set_max_fanout 1 [all_inputs]
+   set_fanout_load 8 [all_outputs]
+   report_port
+   ```
+5. Check Design. Use `Design -> Check Design`.
+6. Compile Design. USe `Design -> Compile Design`.
+
+From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
+
+1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. AThe slack is $specified clock period - critical path propogation delay = +2 ns$. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock by 2ns to meet timing requirements.
+2. Use `Design -> Report Area` to generate area report. Are is reported in terms of cells used.
+3. Use `Design -> Report Power` to generate power estimation report.
+
 <h2>Post-synthesis timing and resource/power usage reports</h2>
+
 
 <h2>Conclusion</h2>
 
