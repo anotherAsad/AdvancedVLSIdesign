@@ -1,9 +1,14 @@
-# AdvancedVLSIdesign
-Contains project submissions for Advanced VLSI Design course - Spring 2024
+# AdvancedVLSIdesign - Term Project
+This is the report on the FIR design project. It showcases:
+- The MATLAB filter design process.
+- Xoefficient exporting for HDL description.
+- Various HDL implementations of the FIR.
+- Usage of Synopsys Design Compiler.
+- Timing, Area and Power reports from Synopsys Design Compiler.
 
 <h2>MATLAB Section</h2>
 
-Keywords: `FIR filter design`, `Q-formats`, `quantization noise`
+_keywords:_ `FIR filter design`, `Q-formats`, `quantization noise`
 
 MATLAB's `designfilt` tool was used to design a filter with required properties, i.e., with a transition region of **0.2 $\pi$ to 0.23 $\pi$ rad/sample**, and a **stop-band attenuation of 80 dB**.
 
