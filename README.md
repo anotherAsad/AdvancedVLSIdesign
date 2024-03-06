@@ -97,7 +97,7 @@ Below is the block-diagram I used as a reference to implement the L2 parallel de
 
 ![graph](./Pictures/Drawings/L2.PNG)
 
-<h3>6. L3 Parallel Form</h3>
+<h3>7. L3 Parallel Form</h3>
 
 The L3 frequency works on essentially on the same principle as L3. It can give _3x_ throughput while using _2x_ filter resources (The L3 implementation has 6 filters, with each having a length of 1/3 of the original).
 
