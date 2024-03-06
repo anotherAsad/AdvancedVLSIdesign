@@ -111,7 +111,11 @@ Since both L2 and L3 parallel designs use broadcast FIR filters as their basic b
 
 <h3>Avoiding Overflows in Filter Design</h3>
 
-As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each. Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
+The following points explain my rationale in choosing output bitwidths to avoid overflows:
+
+- As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each.
+- Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
+- This means that every multiplication (product of 2 signed 16-bit numbers in $Q1.15$ format) will occupy 32-bit, and have a $Q2.30$ as format.
 
 
 <h2>Testbench Simulation Results</h2>
