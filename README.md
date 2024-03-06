@@ -107,9 +107,11 @@ Below is the block-diagram I used as a reference to implement the L2 parallel de
 
 ![graph](./Pictures/Drawings/L3.PNG)
 
-<h4>Avoiding Overflows in Filter Design</h4>
+Since both L2 and L3 parallel designs use broadcast FIR filters as their basic building blocks, one must make sure that the filter coefficients are passed on in the inverted order (i.e. `h[0]` goes to the last multiplier, and `h[N-1]` goes to the first multiplier). Otherwise, filter recombination is incorrect and will produce wrong results.
 
-As stated in the MATLAB section, the filter coefficients are stored in signed Q1.15 fixed-point format, and need 16-bits each. 
+<h3>Avoiding Overflows in Filter Design</h3>
+
+As stated in the MATLAB section, the filter coefficients are stored in signed Q1.15 fixed-point format, and need 16-bits each. Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed Q1.15 format to represent inputs.
 
 
 <h2>Testbench Simulation Results</h2>
