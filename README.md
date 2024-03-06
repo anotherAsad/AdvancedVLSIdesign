@@ -53,7 +53,7 @@ Given below are the design block diagrams of different FIR implementations:
 
 This is the most naive form, derived from the convolution expression of an FIR. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
 
-![graph](./Pictures/Drawings/DirectForm_Original.PNG)
+![graph](./Pictures/Drawings/DirectForm_Original.png)
 
 <h3>2. Pipelined Direct Form</h3>
 
@@ -63,19 +63,19 @@ A useful tip is to limit the log-pipelining stages to such an extent that the ad
 
 Through experimentation, I found that 6 combinational adders at the final stage do not form the critical path. This is reflected in the verilog code.
 
-![graph](./Pictures/Drawings/DirectForm_pipelined.PNG)
+![graph](./Pictures/Drawings/DirectForm_pipelined.png)
 
 <h3>3. Broadcast Form</h3>
 
 The broadcast representation of an FIR filter is inherently pipelined. It also uses less delay elements in comparison to pipelined direct form. The block diagram is given below:
 
-![graph](./Pictures/Drawings/broadcast_fir_noFG.PNG)
+![graph](./Pictures/Drawings/broadcast_fir_noFG.png)
 
 <h3>4. Broadcast Form with Fine-grained Pipelining</h3>
 
 Supports additional, 1 stage fine-grained pipelining between adders and multipliers.
 
-![graph](./Pictures/Drawings/broadcast_fir.PNG)
+![graph](./Pictures/Drawings/broadcast_fir.png)
 
 <h3>5. Symmetric Broadcast Form</h3>
 
@@ -83,7 +83,7 @@ An equiripple low-pass FIR filter is symmetric around the y-axis, i.e., `h[n] ==
 
 The block diagram of a modified broadcast FIR is shown below:
 
-![graph](./Pictures/Drawings/broadcast_fir_symmetric.PNG)
+![graph](./Pictures/Drawings/broadcast_fir_symmetric.png)
 
 The symmetry exploitation only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
 
