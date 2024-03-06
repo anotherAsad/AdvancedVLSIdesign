@@ -166,7 +166,7 @@ To show the veracity of implementations, the analog representation of the filter
 
 ![graph](./Pictures/GTKwave/Analog.PNG)
 
-As can be seen, all outputs are $sinc$ functions, which correspond to a $rect$ in the frequency domain, i.e. a **Low-pass filter**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
+As can be seen, all outputs are $sinc$ functions, which correspond to $rect$s in the frequency domain, i.e. **Low-pass filters**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
@@ -252,12 +252,13 @@ Estimated power consumption is around $4 mW$. Of which, around $3.274 mW$ are ac
 
 <h3>Comparison Table for Different Implementations</h3>
 
+This section concisely compares all the FIR implementations on various metrics.
+
 Given below is a table that compares the timing, power and area reports for all our designs:
 
 ![graph](./Pictures/SynopsysDesignCompiler/ReportTable.PNG)
 
-
-
+The results seem more or less expected. A detailed analysis on the results of this table are given in the next section.
 
 <h2>Conclusion</h2>
 
