@@ -25,7 +25,7 @@ As can be seen, the response is that of an equiripple low-pass filter, with stop
 
 <h3>Filter Quantization</h3>
 
-The absolute maximum value for filter coefficients (the top of the sinc function, i.e. the value in the middle) was **0.2069**. Considering this, a fixed-point representation format of signed Q1.15 was chosen. This means that the coefficients will be stored in 16-bit numbers. 1 bit will be used to represent the sign, and 15 bits will be used to represent the fractional part.
+The absolute maximum value for filter coefficients (the top of the sinc function, i.e. the value in the middle) was **0.2069**. Considering this, a fixed-point representation format of signed $Q1.15$ was chosen. This means that the coefficients will be stored in 16-bit numbers. 1 bit will be used to represent the sign, and 15 bits will be used to represent the fractional part.
 
 The post quantization frequency response is given in the following figure:
 
@@ -111,7 +111,7 @@ Since both L2 and L3 parallel designs use broadcast FIR filters as their basic b
 
 <h3>Avoiding Overflows in Filter Design</h3>
 
-As stated in the MATLAB section, the filter coefficients are stored in signed Q1.15 fixed-point format, and need 16-bits each. Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed Q1.15 format to represent inputs.
+As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each. Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
 
 
 <h2>Testbench Simulation Results</h2>
