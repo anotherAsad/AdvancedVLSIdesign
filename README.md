@@ -148,7 +148,7 @@ This waveform shows the response of all the different FIR implementations when a
 3. The next trace is the _re-serialized_ output of the **L2 parallel** implementation. It is in orange, and has double the data rate as compared to non parallel implementations.
 4. In blue, we have the  _re-serialized_ output of the **L3 parallel** implementation.The data rate is 3x, and every output sample arrives at the rising edge of the `clk_3x` ser-des clock.
 5. In `Parallel_L2` section, we have the serialized output in blue; and the original, parallel output in orange. As can be seen, the parallel output is at the lower clock rate. Also, read from _top to bottom_, `data_out_0` and `data_out_1` form the reserialized output shown just above.
-6. In `Parallel_L3` section, again, the serialized output in blue. The 3 parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$.
+6. In `Parallel_L3` section, again, the serialized output in blue. The 3 parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$. Again the post serialization output agrees with the parallel output, and the output of other FIRs.
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
