@@ -47,7 +47,7 @@ One could think of many ways to implement FIR filters in hardware. I have implem
 4. **Broadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
 5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around y-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
 
-Given below are the design block diagrams of different FIR implementations:
+Given below are the design block diagrams of different FIR implementations. Each implementation has a corresponding verilog file with the same or similar name:
 
 <h3>1. Direct Form</h3>
 
@@ -178,11 +178,11 @@ I have been using the following steps to compile my FIR implementations:
 
 From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
 
-1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock by 2ns to meet timing requirements.
+1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock down by 2ns to meet timing requirements.
 2. Use `Design -> Report Area` to generate area report. Are is reported in terms of cells used.
 3. Use `Design -> Report Power` to generate power estimation report.
 
-<h2>Post-synthesis timing and resource/power usage reports</h2>
+<h2>Post-synthesis Timing and Resource/Power Usage Reports</h2>
 
 
 <h2>Conclusion</h2>
