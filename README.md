@@ -59,7 +59,7 @@ This is the most naive form, derived from the convolution expression of an FIR. 
 
 This implementation breaks down the slow adder from above implementation to a log-pipelined adder. Every stage adds only two operands, and passes on the result to the next stage. This results in a total adder count of `FILTER_SIZE-1`. These pipelined stages help reduce the critical path.
 
-A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in slack reduction, but still consume area/cell resources.
+A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in critical path propogation delay reduction, but still consume area/cell resources.
 
 Through experimentation, I found that 6 combinational adders at the final stage do not form the critical path. This is reflected in the verilog code.
 
@@ -125,6 +125,30 @@ The following points explain my rationale in choosing output bitwidths to avoid 
 
 
 <h2>Testbench Simulation Results</h2>
+
+For simulation of the FIR implementations, I have used **iverilog**, in conjunction with **GTKwave**. The testbench used for simulations instantiates all pertinent FIR implementations, and passes the same input data to them. The outputs can thus be compared side-by-side.
+
+The simulation testbench uses three clocks:
+
+1. `clk` is used as the main processing clock for all FIR implementations.
+2. `clk_2x` is used to serialize/deserialize data for **L2 parallel** implementation.
+3. `clk_3x` is used to serialize/deserialize data for **L3 parallel** implementation.
+
+All three clocks are in phase.
+
+<h3>Post Simulation Waveform</h3>
+
+The following figure shows the post-simulation waveform:
+![graph](./Pictures/GTKwave/Comprehensive.PNG)
+
+This waveform shows the response of all the different FIR implementations when a single sample, impulse input is passed on to it. Description of the above waveform is as follows:
+
+1. Just after the marker, a single sample of input, representing **~+1** in $Q1.15$ is passed.
+2. In the violet _baseline_ traces, we can see the output of different non-parallel implementations of the FIR (e.g. direct form, log_pipelined direct_form, broadcast, broadcast symmetric etc). You can see that all the output samples have the same order for all the FIR implementations. They agree with each other, and also agree with the matlab filter coefficients. The **log-pipelined direct form implementation** lags quite a bit. This is due to the extra steps needed for addition in the implementation.
+3. The next trace is the _re-serialized_ output of the **L2 parallel** implementation. It is in orange, and has double the data rate as compared to non parallel implementations.
+4. In blue, we have the  _re-serialized_ output of the **L3 parallel** implementation.The data rate is 3x, and every output sample arrives at the rising edge of the `clk_3x` ser-des clock.
+5. In `Parallel_L2` section, we have the serialized output in blue; and the original, parallel output in orange. As can be seen, the parallel output is at the lower clock rate. Also, read from _top to bottom_, `data_out_0` and `data_out_1` form the reserialized output shown just above.
+6. In `Parallel_L3` section, again, the serialized output in blue. The 3 parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$.
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
