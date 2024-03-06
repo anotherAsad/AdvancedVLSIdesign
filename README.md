@@ -107,7 +107,9 @@ Below is the block-diagram I used as a reference to implement the L2 parallel de
 
 ![graph](./Pictures/Drawings/L3.PNG)
 
-Since both L2 and L3 parallel designs use broadcast FIR filters as their basic building blocks, one must make sure that the filter coefficients are passed on in the inverted order (i.e. `h[0]` goes to the last multiplier, and `h[N-1]` goes to the first multiplier). Otherwise, filter recombination is incorrect and will produce wrong results.
+Since both L2 and L3 parallel designs use **broadcast FIR filters** as their basic building blocks, one must make sure that the filter coefficients are passed on in the inverted order (i.e. `h[0]` goes to the last multiplier, and `h[N-1]` goes to the first multiplier). Otherwise, filter recombination is incorrect and will produce wrong results.
+
+$Note:$ The L2 and L3 parallel implementations use the **pipelined, broadcast FIR implementations** for their internal subfilters.
 
 <h3>Avoiding Overflows in Filter Design</h3>
 
@@ -149,6 +151,16 @@ This waveform shows the response of all the different FIR implementations when a
 4. In blue, we have the  _re-serialized_ output of the **L3 parallel** implementation.The data rate is 3x, and every output sample arrives at the rising edge of the `clk_3x` ser-des clock.
 5. In `Parallel_L2` section, we have the serialized output in blue; and the original, parallel output in orange. As can be seen, the parallel output is at the lower clock rate. Also, read from _top to bottom_, `data_out_0` and `data_out_1` form the reserialized output shown just above.
 6. In `Parallel_L3` section, again, the serialized output in blue. The 3 parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$. Again the post serialization output agrees with the parallel output, and the output of other FIRs.
+
+
+<h3>Analog Waveform</h3>
+
+To show the veracity of implementations, the analog representation of the filter responses is given below. The input sample is a digital impulse. The outputs of 3 FIRs (broadcast non-parallel, L2 parallel and L3 parallel) are shown in violet, orange and green.
+
+As can be seen, all outputs are $sinc$ functions, which correspond to a $rect$ in the frequency domain, i.e. a **Low-pass filter**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
+
+
+![graph](./Pictures/GTKwave/Analog.PNG)
 
 <h2>Synthesis using Synopsis Design Compiler</h2>
 
