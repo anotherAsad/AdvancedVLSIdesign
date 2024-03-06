@@ -39,13 +39,51 @@ The MATLAB script in the file `code.m` was used to generate the filter, quantize
 
 <h2>FIR implementations in Verilog HDL</h2>
 
-One could think of many ways to implement FIR filters in hardware. I have implemented our FIR filter in the following flavors:
+One could think of many ways to implement FIR filters in hardware. I have implemented the given low-pass FIR filter in the following flavors:
 
 1. **Direct Form**: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
 2. **Pipelined Direct Form**: _The adder from the above design is pipelined: It is broken down logarithmically, with every further stage requiring half or so number of adders than the last one._
 3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
-4. **Pipelined Broadcast Form**: _The multipliers in broadcast form are finegrain pipelined._
+4. **PBroadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
 5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around x-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output. This only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters are not symmetric._
+
+Given below are the design block diagrams of different FIR implementations:
+
+<h3>1. Direct Form</h3>
+
+This is the most naive form, derived from the convolution expression $$x(t) \circledast h(t) &= y(t)$$. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
+
+![graph](./Pictures/Drawings/DirectForm_Original.PNG)
+
+<h3>2. Pipelined Direct Form</h3>
+
+This implementation breaks down the slow adder from above implementation to a log-pipelined adder. Every stage adds only two operands, and passes on the result to the next stage. This results in a total adder count of `FILTER_SIZE-1`. These pipelined stages help reduce the critical path.
+
+A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in slack reduction, but still consume area/cell resources.
+
+Through experimentation, I found that 6 combinational adders at the final stage do not form the critical path. This is reflected in the verilog code.
+
+![graph](./Pictures/Drawings/DirectForm_pipelined.PNG)
+
+<h3>3. Broadcast Form</h3>
+
+The broadcast representation of an FIR filter is inherently pipelined. It also uses less delay elements in comparison to pipelined direct form. The block diagram is given below:
+
+![graph](./Pictures/Drawings/broadcast_fir_noFG.PNG)
+
+<h3>4. Broadcast Form with Finegrain Pipelining</h3>
+
+Supports additional, 1 stage fine-grained pipelining between adders and multipliers.
+
+![graph](./Pictures/Drawings/broadcast_fir.PNG)
+
+<h3>Symmetric Broadcast Form</h3>
+
+broadcast_fir_symmetric
+
+
+
+
 
 <h2>Testbench Simulation Results</h2>
 
