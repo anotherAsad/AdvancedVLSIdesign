@@ -118,7 +118,7 @@ The following points explain my rationale in choosing output bitwidths to avoid 
 - This means that every multiplication (product of 2 signed 16-bit numbers in $Q1.15$ format) will occupy 32-bit, and have a $Q2.30$ as format. Both of the two non-fractional bits represent sign bit. So we have 31 bits of information at the output of each multiplier.
 - Since we have a $204$ tap filter, we need to perform $204$ additions on the multiplication outputs.
 - Every 2-operand addition has the potential to add 1 more bit to the output, given that both operands are max representable values in the given fixed-point format.
-- Since we can breakdown the $204$ additions into a log-tree with 8 steps, we need 8 more fractional bits to avoid overflow. This is corroborated by the fact that since our max multiplication output is $~0.9999%, 204 such additions will result in something around $203.999$, which needs 8 non-fractional bits.
+- Since we can breakdown the $204$ additions into a log-tree with 8 steps, we need 8 more fractional bits to avoid overflow. This is corroborated by the fact that since our max multiplication output is $~0.9999$, 204 such additions will result in something around $203.999$, which needs 8 non-fractional bits.
 - So to avoid overflow, the final adder output must have at least 8 non-fractional bits.
 - In the interest of saving resources, we can drop the lower, fractional bits of multipliers, and translate the q-format from $Q2.30$ to $Q1.15$ at a moderate precision loss.
 - Then, the required final Q-format at the adder outputs is $Q9.15$, and needs 24-bits.
@@ -175,6 +175,8 @@ I have been using the following steps to compile my FIR implementations:
    ```
 5. Check Design. Use `Design -> Check Design`.
 6. Compile Design. USe `Design -> Compile Design`.
+
+<h3>Steps for Report Generation</h3>
 
 From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
 
