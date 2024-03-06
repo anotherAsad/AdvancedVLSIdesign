@@ -221,21 +221,29 @@ From here on, one can generate **timing, area and power** reports. The steps to 
 
 <h2>Post-synthesis Timing and Resource/Power Usage Reports</h2>
 
-Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show the **screenshots** of only two designs here. For the rest, I will summarize the results in a table at the end of this section.
+Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show the **screenshots** of only one designs here. For the rest, I will summarize the results in a table at the end of this section.
 
-<h3>Broadcast form FIR reports</h3>
+<h3>Screenshots Broadcast form FIR reports</h3>
 
 <h4>Timing Report:</h4>
 
 ![graph](./Pictures/SynopsysDesignCompiler/Broadcast/TimingReport.PNG)
 
+The critical path (highlighted) is due to a multiplier, and has a propogation delay of $5.77 ns$. The target clock period is $40 ns$, corresponding to $25 MHz$ frequency. The slack is $34.47 ns$. Which means that this design can run at the max clock frequency of about $173 MHz$.
+
 <h4>Area Report:</h4>
 
 ![graph](./Pictures/SynopsysDesignCompiler/Broadcast/AreaReport.PNG)
 
+Total cell area is 142251 units. Net area in mm^2 is undefined, because I haven't specified pin-out details like wireloads etc.
+
 <h4>Power Report:</h4>
 
 ![graph](./Pictures/SynopsysDesignCompiler/Broadcast/PowerReport.PNG)
+
+Estimated power consumption is around $4 mW$. Of which, around $3.274 mW$ are accounted for as dynamic power consumption.
+
+<h3>Comparison Table of Different Implementations</h3>
 
 
 
