@@ -5,7 +5,7 @@ Contains project submissions for Advanced VLSI Design course - Spring 2024
 
 Keywords: `FIR filter design`, `Q-formats`, `quantization noise`
 
-MATLAB's `designfilt` tool was used to design a filter with required properties, i.e., with a transition region of **0.2$\pi$ to 0.23$\pi$ rad/sample**, and a **stop-band attenuation of 80 dB**.
+MATLAB's `designfilt` tool was used to design a filter with required properties, i.e., with a transition region of **0.2 $\pi$ to 0.23 $\pi$ rad/sample**, and a **stop-band attenuation of 80 dB**.
 
 <h3>Filter Details</h3>
 
@@ -106,6 +106,11 @@ The L3 system is also fed using a _3x_ faster clock that is used for serializati
 Below is the block-diagram I used as a reference to implement the L2 parallel design:
 
 ![graph](./Pictures/Drawings/L3.PNG)
+
+<h4>Avoiding Overflows in Filter Design</h4>
+
+As stated in the MATLAB section, the filter coefficients are stored in signed Q1.15 fixed-point format, and need 16-bits each. 
+
 
 <h2>Testbench Simulation Results</h2>
 
