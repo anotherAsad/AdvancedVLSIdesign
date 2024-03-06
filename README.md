@@ -51,6 +51,8 @@ One could think of many ways to implement FIR filters in hardware. I have implem
 3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
 4. **Broadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
 5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around y-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
+6. **L2 Parallel**: _Reduced complexity L2 parallel implementation._
+7. **L2 Parallel**: _Reduced complexity L3 parallel implementation._
 
 Given below are the design block diagrams of different FIR implementations. Each implementation has a corresponding verilog file with the same or similar name:
 
@@ -253,6 +255,7 @@ Estimated power consumption is around $4 mW$. Of which, around $3.274 mW$ are ac
 Given below is a table that compares the timing, power and area reports for all our designs:
 
 ![graph](./Pictures/SynopsysDesignCompiler/ReportTable.PNG)
+
 
 
 
