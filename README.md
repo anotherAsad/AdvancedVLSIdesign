@@ -262,4 +262,26 @@ The results seem more or less expected. A detailed analysis on the results of th
 
 <h2>Conclusion</h2>
 
+From the table above, one can draw the following conclusions:
 
+<h3>Timing Analysis</h3>
+
+1. In terms of timing, the **Direct Form** implementation is the worst design. The slack is zero, which means that despite all the optimizations, the design _just_ meets the timing constraints.
+2. The **log-pipelined** direct form design is the best in terms of timing. It has a lot of time budget, i.e. a slack of $36.25 ns$. This is also expected, since it has a lot of hand-tuned optimizations. Moreover, the design is uniquely amicable to compile-time re-timing. The design compiler must have fine-grain pipelined the multipliers from the extra budget of log-pipelined adders.
+3. The broadcast designs, due to their natural pipelining, exhitbit high max operating frequencies. The additional fine-grained pipelining also helps in improving max operating frequency, but this comes at the cost of around $1.6x$ more area consumption.
+4. The symmetry exploiting design has a similar timing performance to the broadcast design. This means that the bottleneck is not the redundant multipliers.
+5. Both **L1** and **L2** parallel designs have similar max operating frequency, but have 2x and 3x datarate respectively. Both of them are based off of finegrain pipelined broadcast design.
+
+<h3>Power Analysis</h3>
+
+1. All designs consume around 80% of the net power as dynamic power.
+2. It seems like registers consume a lot of power, since designs with lower register count have lower power consumption (Compare pipelined and non-pipelined broadcast design).
+3. Due to symmetry exploitation, there is a **significant reduction in net power consumption**. This means that the redundant multipliers, although not impacting the critical path, were using up a lot of power.
+4. Due to large resource count, the $L2$ and $L3$ parallel designs seem power hungry. But I can't understand why their power consumption is so much higher than the base design.
+
+<h4>Area Analysis</h4>
+
+1. The direct form, with its enormous combinational adder, has the largest real estate consumption.
+2. After symmetry exploitation, the area reduces by around $20\%$ due to lesses multiplier count.
+3. Most interestingly, the **parallel L2** design has $1.6x$ more area than the baseline design. This agrees remarkably well with the first-principle extimation of $1.5x$, because L2 design is supposed to use 3 filters of 1/2 of the original length, i.e., $1.5x$ the original filter complexity.
+4. Similarly, the **parallel L3** design uses $2.2x$ more area than the base line design. The first-principle estimation was $2x$, because we have 6 sub-filters, each with 1/3 of the original length.
