@@ -1,7 +1,7 @@
 # AdvancedVLSIdesign - Term Project
 This is the report on the FIR design project. It showcases:
 - The MATLAB filter design process.
-- Xoefficient exporting for HDL description.
+- Coefficient exporting for HDL description.
 - Various HDL implementations of the FIR.
 - Usage of Synopsys Design Compiler.
 - Timing, Area and Power reports from Synopsys Design Compiler.
@@ -30,13 +30,13 @@ As can be seen, the response is that of an equiripple low-pass filter, with stop
 
 <h3>Filter Quantization</h3>
 
-The absolute maximum value for filter coefficients (the top of the sinc function, i.e. the value in the middle) was **0.2069**. Considering this, a fixed-point representation format of signed $Q1.15$ was chosen. This means that the coefficients will be stored in 16-bit numbers. 1 bit will be used to represent the sign, and 15 bits will be used to represent the fractional part.
+The absolute maximum value for filter coefficients (the top of the $sinc$ function, i.e. the value in the middle) was **0.2069**. Considering this, a fixed-point representation format of signed $Q1.15$ was chosen. This means that the coefficients will be stored in 16-bit numbers. 1 bit will be used to represent the sign, and 15 bits will be used to represent the fractional part.
 
 The post quantization frequency response is given in the following figure:
 
 ![graph](./Pictures/MATLAB/freqz.PNG)
 
-The top figure shows the magnitude response, while the bottom figure shows the phase response. The *blue* traces represent the original/un-quantized filter response, wheras the *orange* trace shows the post quantization response. As can be seen, quantization impacts the stop-band: the response is not longer perfectly equiripple, and the stop-band attenuation is no more below the stipulated 80 dB - it now goes only as low as around 74 dB.
+The top figure shows the magnitude response, while the bottom figure shows the phase response. The *blue* traces represent the original/un-quantized filter response, whereas the *orange* trace shows the post quantization response. As can be seen, quantization impacts the stop-band: the response is no longer perfectly equiripple, and the stop-band attenuation is no more below the stipulated 80 dB - it now goes only as low as around 74 dB.
 
 <h4></h4>
 
@@ -49,8 +49,8 @@ One could think of many ways to implement FIR filters in hardware. I have implem
 1. **Direct Form**: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
 2. **Pipelined Direct Form**: _The adder from the above design is pipelined: It is broken down logarithmically, with every further stage requiring half or so number of adders than the last one._
 3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
-4. **Broadcast Form with Finegrain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
-5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around y-axis, half the mulitplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
+4. **Broadcast Form with Fine Grain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
+5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around the y-axis, half the multiplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
 6. **L2 Parallel**: _Reduced complexity L2 parallel implementation._
 7. **L2 Parallel**: _Reduced complexity L3 parallel implementation._
 
@@ -58,15 +58,15 @@ Given below are the design block diagrams of different FIR implementations. Each
 
 <h3>1. Direct Form</h3>
 
-This is the most naive form, derived from the convolution expression of an FIR. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path. 
+This is the most naive form, derived from the convolution expression of an FIR. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path.
 
 ![graph](./Pictures/Drawings/DirectForm_Original.png)
 
 <h3>2. Pipelined Direct Form</h3>
 
-This implementation breaks down the slow adder from above implementation to a log-pipelined adder. Every stage adds only two operands, and passes on the result to the next stage. This results in a total adder count of `FILTER_SIZE-1`. These pipelined stages help reduce the critical path.
+This implementation breaks down the slow adder from the above implementation to a log-pipelined adder. Every stage adds only two operands, and passes on the result to the next stage. This results in a total adder count of `FILTER_SIZE-1`. These pipelined stages help reduce the critical path.
 
-A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in critical path propogation delay reduction, but still consume area/cell resources.
+A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in critical path propagation delay reduction, but still consume area/cell resources.
 
 Through experimentation, I found that 6 combinational adders at the final stage do not form the critical path. This is reflected in the verilog code.
 
@@ -92,7 +92,7 @@ The block diagram of a modified broadcast FIR is shown below:
 
 ![graph](./Pictures/Drawings/broadcast_fir_symmetric.png)
 
-The symmetry exploitation only works for non-parallel implementations, because in parallel implimentations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
+The symmetry exploitation only works for non-parallel implementations, because in parallel implementations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
 
 <h3>6. L2 Parallel Form</h3>
 
@@ -106,7 +106,7 @@ Below is the block-diagram I used as a reference to implement the L2 parallel de
 
 <h3>7. L3 Parallel Form</h3>
 
-The L3 frequency works on essentially on the same principle as L3. It can give _3x_ throughput while using _2x_ filter resources (The L3 implementation has 6 filters, with each having a length of 1/3 of the original).
+The L3 frequency works essentially on the same principle as L3. It can give _3x_ throughput while using _2x_ filter resources (The L3 implementation has 6 filters, with each having a length of 1/3 of the original).
 
 The L3 system is also fed using a _3x_ faster clock that is used for serialization and de-serialization of the incoming/outgoing data. The internal core works in parallel at a slower clock.
 
@@ -120,7 +120,7 @@ $Note:$ The L2 and L3 parallel implementations use the **pipelined, broadcast FI
 
 <h3>Avoiding Overflows in Filter Design</h3>
 
-The following points explain my rationale in choosing output bitwidths to avoid overflows:
+The following points explain my rationale in choosing output bit-widths to avoid overflows:
 
 - As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each.
 - Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
@@ -157,7 +157,7 @@ This waveform shows the response of all the different FIR implementations when a
 3. The next trace is the _re-serialized_ output of the **L2 parallel** implementation. It is in orange, and has double the data rate as compared to non parallel implementations.
 4. In blue, we have the  _re-serialized_ output of the **L3 parallel** implementation.The data rate is 3x, and every output sample arrives at the rising edge of the `clk_3x` ser-des clock.
 5. In `Parallel_L2` section, we have the serialized output in blue; and the original, parallel output in orange. As can be seen, the parallel output is at the lower clock rate. Also, read from _top to bottom_, `data_out_0` and `data_out_1` form the reserialized output shown just above.
-6. In `Parallel_L3` section, again, the serialized output in blue. The 3 parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$. Again the post serialization output agrees with the parallel output, and the output of other FIRs.
+6. In the `Parallel_L3` section, again, the serialized output is in blue. The 3-parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$. Again the post serialization output agrees with the parallel output, and the output of other FIRs.
 
 
 <h3>Analog Waveform</h3>
@@ -168,7 +168,7 @@ To show the veracity of implementations, the analog representation of the filter
 
 As can be seen, all outputs are $sinc$ functions, which correspond to $rect$s in the frequency domain, i.e. **Low-pass filters**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
 
-<h2>Synthesis using Synopsis Design Compiler</h2>
+<h2>Synthesis using Synopsys Design Compiler</h2>
 
 The Synopsys Design  Compiler is invoked by entering `design_vision` in the terminal. At the beginning of a new project, one must expose the cell libraries that are to be used for synthesis and compilation. A setup script written to achieve that looks like the one given below:
 
@@ -193,7 +193,7 @@ This script sets up `lsi_10k` library as a source for cells and technology speci
 I have been using the following steps to compile my FIR implementations:
 
 1. Setup cell library (as stated above).
-2. Analyze the verilog module to be synthesized. Use `File -> Analyze`. It turns out that the design compiler supports a very strict subset of verilog. One may have to retailor the code at some spots to make it pass with design compiler.
+2. Analyze the verilog module to be synthesized. Use `File -> Analyze`. It turns out that the design compiler supports a very strict subset of verilog. One may have to re-tailor the code at some spots to make it pass with a design compiler.
 3. Elaborate the top module. Use `File -> Elaborate`.
 4. Specify timing and load capacitance constraints. I have batched my specifications in a `tcl` script given below:
    ```tcl
@@ -222,9 +222,9 @@ I have been using the following steps to compile my FIR implementations:
 
 From here on, one can generate **timing, area and power** reports. The steps to do that are as follows:
 
-1. Use `Timing -> Report Timing Path` to generate timing report. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propogation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock down by 2ns to meet timing requirements.
-2. Use `Design -> Report Area` to generate area report. Area is reported in terms of cells used.
-3. Use `Design -> Report Power` to generate power estimation report.
+1. Use `Timing -> Report Timing Path` to generate timing reports. The crucial metric here is the **slack**. Defined in units of nano-seconds, it is the spare time budget of the critical path for a specified clock period. For example, let's assume a specified clock period of 100 ns, and a critical path of 98 ns. Here, the slack will be calculated as: `specified clock period - critical path propagation delay = +2 ns`. This means that we can still decrease the clock period by 2 ns, and the design will keep working. On the other hand, a negative slack means that the timing constraints have failed. As an example, a slack of -2 ns means that we have to slow the clock down by 2ns to meet timing requirements.
+2. Use `Design -> Report Area` to generate an area report. Area is reported in terms of cells used.
+3. Use `Design -> Report Power` to generate power estimation reports.
 
 <h2>Post-synthesis Timing and Resource/Power Usage Reports</h2>
 
@@ -267,8 +267,8 @@ From the table above, one can draw the following conclusions:
 <h3>Timing Analysis</h3>
 
 1. In terms of timing, the **Direct Form** implementation is the worst design. The slack is zero, which means that despite all the optimizations, the design _just_ meets the timing constraints.
-2. The **log-pipelined** direct form design is the best in terms of timing. It has a lot of time budget, i.e. a slack of $36.25 ns$. This is also expected, since it has a lot of hand-tuned optimizations. Moreover, the design is uniquely amicable to compile-time re-timing. The design compiler must have fine-grain pipelined the multipliers from the extra budget of log-pipelined adders.
-3. The broadcast designs, due to their natural pipelining, exhitbit high max operating frequencies. The additional fine-grained pipelining also helps in improving max operating frequency, but this comes at the cost of around $1.6x$ more area consumption.
+2. The **log-pipelined** direct form design is the best in terms of timing. It has a lot of time budget, i.e. a slack of $36.25 ns$. This is also expected, since it has a lot of hand-tuned optimizations. Moreover, the design is uniquely amicable to compile-time re-timing. The design compiler must have fine-grained pipelined the multipliers from the extra budget of log-pipelined adders.
+3. The broadcast designs, due to their natural pipelining, exhibit high max operating frequencies. The additional fine-grained pipelining also helps in improving max operating frequency, but this comes at the cost of around $1.6x$ more area consumption.
 4. The symmetry exploiting design has a similar timing performance to the broadcast design. This means that the bottleneck is not the redundant multipliers.
 5. Both **L1** and **L2** parallel designs have similar max operating frequency, but have 2x and 3x datarate respectively. Both of them are based off of finegrain pipelined broadcast design.
 
@@ -279,9 +279,11 @@ From the table above, one can draw the following conclusions:
 3. Due to symmetry exploitation, there is a **significant reduction in net power consumption**. This means that the redundant multipliers, although not impacting the critical path, were using up a lot of power.
 4. Due to large resource count, the $L2$ and $L3$ parallel designs seem power hungry. But I can't understand why their power consumption is so much higher than the base design.
 
-<h4>Area Analysis</h4>
+<h3>Area Analysis</h3>
 
 1. The direct form, with its enormous combinational adder, has the largest real estate consumption.
 2. After symmetry exploitation, the area reduces by around $20\%$ due to lesses multiplier count.
 3. Most interestingly, the **parallel L2** design has $1.6x$ more area than the baseline design. This agrees remarkably well with the first-principle extimation of $1.5x$, because L2 design is supposed to use 3 filters of 1/2 of the original length, i.e., $1.5x$ the original filter complexity.
 4. Similarly, the **parallel L3** design uses $2.2x$ more area than the base line design. The first-principle estimation was $2x$, because we have 6 sub-filters, each with 1/3 of the original length.
+
+
