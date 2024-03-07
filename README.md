@@ -1,4 +1,4 @@
-# AdvancedVLSIdesign - Term Project
+# Advanced VLSI Design - Term Project
 This is the report on the FIR design project. It showcases:
 - The MATLAB filter design process.
 - Coefficient exporting for HDL description.
