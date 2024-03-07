@@ -6,6 +6,8 @@ This is the report on the FIR design project. It showcases:
 - Usage of Synopsys Design Compiler.
 - Timing, Area and Power reports from Synopsys Design Compiler.
 
+**Note**: The main testbench is in the `code.v` file. Use `run_sns.ps1` script to simulate the design.
+
 <h2>MATLAB Section</h2>
 
 _keywords:_ `FIR filter design`, `Q-formats`, `quantization noise`
