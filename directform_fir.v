@@ -1,12 +1,13 @@
 module directform_fir_full(
-	output wire [15:0] data_out,
+	output wire [23:0] data_out,
 	input  wire [15:0] data_in,
 	input  wire en, clk, reset
 );
 	integer i;
 	reg [15:0] delay_line [0:`FILTER_SIZE-1];
-	reg [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
-	reg [15:0] adder [0:`FILTER_SIZE-1];
+	
+	reg signed [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
+	reg signed [23:0] adder [0:`FILTER_SIZE-1];
 
 	always @(*) delay_line[0] = data_in;
 
@@ -25,9 +26,9 @@ module directform_fir_full(
 
 				// HEED: blocking assignment.
 				if(i == 0)
-					adder[i] = multiplier[i][30-:16];
+					adder[i] = $signed(multiplier[i][30-:16]);
 				else
-					adder[i] = adder[i-1] + multiplier[i][30-:16];
+					adder[i] = $signed(adder[i-1]) + $signed(multiplier[i][30-:16]);
 			end
 		end
 	end
@@ -37,7 +38,7 @@ endmodule
 
 // fine-grained pipelining of the final adder
 module directform_fir_full_pipelined(
-	output wire [15:0] data_out,
+	output wire [23:0] data_out,
 	input  wire [15:0] data_in,
 	input  wire en, clk, reset
 );
@@ -63,11 +64,11 @@ module directform_fir_full_pipelined(
 		end
 	end
 
-	reg signed [15:0] adder_out_stage_1 [0:`FILTER_SIZE/2-1];		// 0..101
-	reg signed [15:0] adder_out_stage_2 [0:`FILTER_SIZE/4-1];		// 0..50
-	reg signed [15:0] adder_out_stage_3 [0:`FILTER_SIZE/8-0];		// 0..25. One extra adder for the straggler
-	reg signed [15:0] adder_out_stage_4 [0:`FILTER_SIZE/16];		// 0..12
-	reg signed [15:0] adder_out;
+	reg signed [19:0] adder_out_stage_1 [0:`FILTER_SIZE/2-1];		// 0..101
+	reg signed [20:0] adder_out_stage_2 [0:`FILTER_SIZE/4-1];		// 0..50
+	reg signed [21:0] adder_out_stage_3 [0:`FILTER_SIZE/8-0];		// 0..25. One extra adder for the straggler
+	reg signed [22:0] adder_out_stage_4 [0:`FILTER_SIZE/16];		// 0..12
+	reg signed [23:0] adder_out;
 
 	always @(posedge clk) begin
 		// stage 1
@@ -75,7 +76,7 @@ module directform_fir_full_pipelined(
 			if(reset)
 				adder_out_stage_1[i] <= 16'd0;
 			else if(en) begin
-				adder_out_stage_1[i] <= multiplier[2*i][30-:16] + multiplier[2*i+1][30-:16];
+				adder_out_stage_1[i] <= $signed(multiplier[2*i][30-:16]) + $signed(multiplier[2*i+1][30-:16]);
 			end
 		end
 

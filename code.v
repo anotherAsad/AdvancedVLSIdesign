@@ -11,9 +11,9 @@
 module testbench;
 	integer i;
 
-	wire [15:0] data_out_L2, data_out_L3;
-	wire [15:0] data_out_baseline_direct, data_out_direct_log_pipelined;
-	wire [15:0] data_out_baseline_symmetric, data_out_baseline_broadcast;
+	wire [23:0] data_out_L2, data_out_L3;
+	wire [23:0] data_out_baseline_direct, data_out_direct_log_pipelined;
+	wire [23:0] data_out_baseline_symmetric, data_out_baseline_broadcast;
 	reg  [15:0] data_in;
 	reg  en, reset;
 	reg  clk, clk_2x, clk_3x;

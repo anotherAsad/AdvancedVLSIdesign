@@ -1,11 +1,11 @@
 module broadcast_fir_full_nopipeline(
-	output wire [15:0] data_out,
-	input  wire [15:0] data_in,
+	output wire signed [23:0] data_out,
+	input  wire signed [15:0] data_in,
 	input  wire en, clk, reset
 );
 	integer i;
-	reg [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
-	reg [15:0] adder [0:`FILTER_SIZE-1];
+	reg signed [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
+	reg signed [23:0] adder [0:`FILTER_SIZE-1];
 
 	// uses compile-time parametrized synthesis direction.
 	always @(posedge clk) begin
@@ -19,7 +19,7 @@ module broadcast_fir_full_nopipeline(
 				if(i == 0)
 					adder[i] <= multiplier[i][30-:16];
 				else
-					adder[i] <= multiplier[i][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[i][30-:16]) + $signed(adder[i-1]);
 			end
 		end
 	end
@@ -28,13 +28,13 @@ module broadcast_fir_full_nopipeline(
 endmodule
 
 module broadcast_fir_full(
-	output wire [15:0] data_out,
-	input  wire [15:0] data_in,
+	output wire signed [23:0] data_out,
+	input  wire signed [15:0] data_in,
 	input  wire en, clk, reset
 );
 	integer i;
-	reg [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
-	reg [15:0] adder [0:`FILTER_SIZE-1];
+	reg signed [31:0] multiplier [0:`FILTER_SIZE-1];		// 0..171 -> 0..85
+	reg signed [23:0] adder [0:`FILTER_SIZE-1];
 
 	// uses compile-time parametrized synthesis direction.
 	always @(posedge clk) begin
@@ -46,9 +46,9 @@ module broadcast_fir_full(
 				multiplier[i] <= $signed(coeff_broadcaster.fir_coeff[`FILTER_SIZE-1-i]) * $signed(data_in);
 				// adders
 				if(i == 0)
-					adder[i] <= multiplier[i][30-:16];
+					adder[i] <= $signed(multiplier[i][30-:16]);
 				else
-					adder[i] <= multiplier[i][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[i][30-:16]) + $signed(adder[i-1]);
 			end
 		end
 	end
@@ -57,24 +57,24 @@ module broadcast_fir_full(
 endmodule
 
 module broadcast_fir_half(
-	output wire [15:0] data_out,
-	input  wire [15:0] data_in,
+	output wire signed [23:0] data_out,
+	input  wire signed [15:0] data_in,
 	input  wire en, clk, reset
 );
 	parameter xfr_func_idx = 0;
 
 	integer i;
-	reg [31:0] multiplier [0:`FILTER_SIZE/2-1];		// 0..171 -> 0..85
-	reg [15:0] adder [0:`FILTER_SIZE/2-1];
+	reg signed [31:0] multiplier [0:`FILTER_SIZE/2-1];		// 0..171 -> 0..85
+	reg signed [23:0] adder [0:`FILTER_SIZE/2-1];
 
-	reg [15:0] coeff[0:`FILTER_SIZE/2-1];
+	reg signed [15:0] coeff[0:`FILTER_SIZE/2-1];
 		
 	// Expect compile time synthesis
 	always @(*) begin
 		for(i=0; i<`FILTER_SIZE/2; i=i+1) begin
 			case(xfr_func_idx)
 				0: coeff[i] = coeff_broadcaster.fir_coeff[i*2+0];
-				1: coeff[i] = coeff_broadcaster.fir_coeff[i*2+0] + coeff_broadcaster.fir_coeff[i*2+1];
+				1: coeff[i] = $signed(coeff_broadcaster.fir_coeff[i*2+0]) + $signed(coeff_broadcaster.fir_coeff[i*2+1]);
 				2: coeff[i] = coeff_broadcaster.fir_coeff[i*2+1];
 				default : coeff[i] = 0;
 			endcase
@@ -91,9 +91,9 @@ module broadcast_fir_half(
 				multiplier[i] <= $signed(coeff[`FILTER_SIZE/2-1-i]) * $signed(data_in);
 				// adder
 				if(i == 0)
-					adder[i] <= multiplier[i][30-:16];
+					adder[i] <= $signed(multiplier[i][30-:16]);
 				else
-					adder[i] <= multiplier[i][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[i][30-:16]) + $signed(adder[i-1]);
 			end
 		end
 	end
@@ -103,17 +103,17 @@ endmodule
 
 
 module broadcast_fir_onethird(
-	output wire [15:0] data_out,
-	input  wire [15:0] data_in,
+	output wire signed [23:0] data_out,
+	input  wire signed [15:0] data_in,
 	input  wire en, clk, reset
 );
 	parameter xfr_func_idx = 0;
 
 	integer i;
-	reg [31:0] multiplier [0:`FILTER_SIZE/3-1];		// 0..203 -> 0..67
-	reg [15:0] adder [0:`FILTER_SIZE/3-1];
+	reg signed [31:0] multiplier [0:`FILTER_SIZE/3-1];		// 0..203 -> 0..67
+	reg signed [23:0] adder [0:`FILTER_SIZE/3-1];
 
-	reg [15:0] coeff [0:`FILTER_SIZE/3-1];
+	reg signed [15:0] coeff [0:`FILTER_SIZE/3-1];
 
 	always @(*) begin
 		for(i=0; i<`FILTER_SIZE/3; i+=1) begin
@@ -140,9 +140,9 @@ module broadcast_fir_onethird(
 				multiplier[i] <= $signed(coeff[`FILTER_SIZE/3-1-i]) * $signed(data_in);
 				// adders
 				if(i == 0)
-					adder[i] <= multiplier[i][30-:16];
+					adder[i] <= $signed(multiplier[i][30-:16]);
 				else
-					adder[i] <= multiplier[i][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[i][30-:16]) + $signed(adder[i-1]);
 			end
 		end
 	end

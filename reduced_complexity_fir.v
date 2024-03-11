@@ -1,13 +1,13 @@
 
 // Exploits symmetry to use half the amount of multipliers. Designed as broadcast fir. Exhibits L1 pipelining.
 module reduced_complexity_fir_full(
-	output wire [15:0] data_out,
+	output wire [23:0] data_out,
 	input  wire [15:0] data_in,
 	input  wire en, clk, reset
 );
 	integer i;
-	reg [31:0] multiplier [0:`FILTER_SIZE/2-1];		// 0..171 -> 0..85
-	reg [15:0] adder [0:`FILTER_SIZE-1];
+	reg signed [31:0] multiplier [0:`FILTER_SIZE/2-1];		// 0..171 -> 0..85
+	reg signed [23:0] adder [0:`FILTER_SIZE-1];
 
 	always @(posedge clk) begin
 		for(i=0; i<`FILTER_SIZE/2; i+=1) begin
@@ -27,11 +27,11 @@ module reduced_complexity_fir_full(
 				adder[i] <= 24'd0;
 			else if(en) begin
 				if(i == 0)
-					adder[i] <= multiplier[i][30-:16];
+					adder[i] <= $signed(multiplier[i][30-:16]);
 				else if(i < `FILTER_SIZE/2)
-					adder[i] <= multiplier[i][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[i][30-:16]) + $signed(adder[i-1]);
 				else
-					adder[i] <= multiplier[`FILTER_SIZE-i-1][30-:16] + adder[i-1];
+					adder[i] <= $signed(multiplier[`FILTER_SIZE-i-1][30-:16]) + $signed(adder[i-1]);
 			end
 		end			
 	end
