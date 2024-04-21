@@ -15,8 +15,6 @@ module serial_syndrome_calculator(
 	input  wire kick_off,
 	input  wire en, clk, reset
 );
-	integer i;
-
 	reg [`M+1:0] counter;
 	reg [`W-1:0] rx_data_latch;
 
@@ -25,7 +23,7 @@ module serial_syndrome_calculator(
 	// Sequential syndrome calculator
 	always @(posedge clk) begin
 		if(reset)
-			{counter, busy, data_out_valid} <= 0;
+			{counter, busy, S_1, S_3, rx_data_latch, data_out_valid} <= 0;
 		else if(en) begin
 			if(kick_off) begin
 				busy <= 1'b1;
@@ -41,8 +39,8 @@ module serial_syndrome_calculator(
 				// increment counter.
 				counter <= counter + 1;
 				// iteratively calculate syndrome
-				S_1 = S_1 ^ (alpha.power[counter] & {4{rx_data_latch[i]}});						// extend
-				S_3 = S_3 ^ (alpha.power[field_modulo(3*counter)] & {4{rx_data_latch[i]}});		// extend
+				S_1 <= S_1 ^ (alpha.power[counter] & {4{rx_data_latch[counter]}});						// extend
+				S_3 <= S_3 ^ (alpha.power[field_modulo(3*counter)] & {4{rx_data_latch[counter]}});		// extend
 			end
 
 			// data_out_valid handle 
@@ -131,15 +129,13 @@ module error_corrector(
 	// correction_mask handle
 	// TO DO: Rework on this
 	always @(*) begin
-		if(input_valid & error_found) begin
-			if(single_bit_error_flag == 0) begin			// is single bit error
-				correction_mask = (1'b1 << single_error_loc);
-				output_valid = 1'b1;
-			end
-			else begin
-				correction_mask = (1'b1 << chien_loc_0) | (1'b1 << chien_loc_1);
-				output_valid = chien_search_complete;
-			end
+		if(input_valid & error_found & single_bit_error_flag == 0) begin
+			correction_mask = (1'b1 << single_error_loc);
+			output_valid = 1'b1;
+		end
+		else begin
+			correction_mask = (1'b1 << chien_loc_0) | (1'b1 << chien_loc_1);
+			output_valid = chien_search_complete;
 		end
 	end
 
@@ -160,7 +156,7 @@ module error_corrector(
 		if(reset)
 			{term1, term2, stall, counter} <= 0;
 		else if(en) begin
-			if(!stall && error_found && single_bit_error_flag != 4'd0) begin
+			if(input_valid && error_found && single_bit_error_flag != 4'd0) begin
 				stall <= 1;
 				term1 <= S_1;
 				term2 <= alpha.power[field_modulo(2*log_S1)];
@@ -216,12 +212,12 @@ module BCH_decoder(
 	wire syncalc_error_found;
 	wire [`M-1:0] S_1, S_3;
 
-	parallel_syndrome_calculator syndrome_calculator(
+	serial_syndrome_calculator syndrome_calculator(
 		.data_out_valid(syncalc_output_valid),
 		.error_found(syncalc_error_found),
 		.S_1(S_1), .S_3(S_3),
 		.rx_data(rx_data),
-		.rx_data_valid(rx_data_valid),
+		.kick_off(rx_data_valid),
 		.en(en), .clk(clk), .reset(reset)
 	);
 	
@@ -247,7 +243,7 @@ module BCH_decoder(
 	assign output_valid = errcorr_output_valid;
 	assign decoder_busy = errcorr_busy;
 	assign decode_failure = errcorr_invalid_correction;
-	assign corrected_data = correction_mask ^ rx_data;
+	assign corrected_data = (errcorr_output_valid) ? correction_mask ^ rx_data: 0;
 endmodule
 
 module testbench;
@@ -297,14 +293,14 @@ module testbench;
 		$dumpfile("test.vcd");
 		$dumpvars(0, testbench);
 
-		#0 en = 0; clk = 0; reset = 0;
+		#0 en = 0; clk = 0; reset = 0; kick_off = 0; rx_data = 0;
 		#1 reset = 1;
 		#1 clk = 1;
 		#1 clk = 0;
 		#1 reset = 0;
 		
 		#1 en = 1;
-		#1 rx_data = 15'b111010001000000 ^ ((1 << 11) | (1 << 1));
+		#1 rx_data = 15'b111010001000000 ^ ((1 << 11) | (1 << 11));
 		#1 kick_off = 1;
 
 		#1 clk = 1;
