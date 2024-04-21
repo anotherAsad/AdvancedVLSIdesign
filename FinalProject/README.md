@@ -1,13 +1,19 @@
-# Ultra Low Latency BCH codec for cacheline granularities.
+# Ultra Low Latency BCH Codec for 64B Cacheline Granularities
 
-This is the report on the FIR design project. It showcases:
-- The MATLAB filter design process.
-- Coefficient exporting for HDL description.
-- Various HDL implementations of the FIR.
-- Usage of Synopsys Design Compiler.
-- Timing, Area and Power reports from Synopsys Design Compiler.
+This is the report on Low Latency BCH encoder design project. It showcases:
+- The MATLAB implementation of a simple BCH decoder.
+- Verilog Simulation of BCH codec, with serial (traditional) and parallel (ultra-fast) implementations.
+- Synopsis Design Compiler Timing Reports.
 
-**Note**: The main testbench is in the `code.v` file. Use `run_sns.ps1` script to simulate the design.
+**Note**: Use `gns.ps1` script to simulate the design.
+
+<h2>BCH Codes</h2>
+
+BCH codes are a class of linear error correction codes that use polynomial arithmetic over a _Galois Field_ for encoding and decoding. The details of the encoding/decoding theory are in the accompanying [presentation](./presentation.pdf).
+
+The target of this project is to implement low-latency BCH encoders and decoders for cacheline granularities (64 B).
+
+BCH codes are defined over length $n = 2^m - 1$.
 
 <h2>MATLAB Section</h2>
 
