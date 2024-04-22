@@ -137,6 +137,8 @@ Screenshots of post-synthesis/post-compilation reports for different designs can
 
 ![graph](./Pictures/SynopsisDesignCompiler/parallelBCHdecoder_2pipeline.PNG)
 
+As can be seen, the slack is barely met.
+
 
 <h2>Analysis and Conclusion</h2>
 
