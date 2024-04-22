@@ -9,11 +9,19 @@ This is the report on Low Latency BCH encoder design project. It showcases:
 
 <h2>BCH Codes</h2>
 
+_keywords_: `DEC-TED`, `Truncated Code`, `Galois Field`, 
+
 BCH codes are a class of linear error correction codes that use polynomial arithmetic over a _Galois Field_ for encoding and decoding. The details of the encoding/decoding theory are in the accompanying [presentation](./presentation.pdf).
 
 The target of this project is to implement low-latency BCH encoders and decoders for cacheline granularities (64 B).
 
-BCH codes are defined over length $n = 2^m - 1$.
+BCH codes are defined over length $n = 2^m - 1$, where $m$ is the extent of the Galois field (total number of elements in the field), and $n$ is length of a coded message. The number of original message bits is denoted $k$, and is a function of the error correction capability (single error correct, double error correct etc.; denoted as $t=1, 2...$) of the code.
+
+To keep the decode latency predictable and low, and to model a system that compares with **IBM's Chipkill**, I have chosen a DEC-TED (Double Error Correct, Triple Error Detect) BCH code that works at a **sub-cacheline granularity**. For this code, $m=8$. Consequently, the code is defined as a BCH code of $\(n, k\) = \(255, 239\)$.
+
+Since the $\(n, k\) = \(255, 239\)$ code does not have a message or codeword length divisible by 8, I have chosen to drop $111$ Most Significant Bits of both the codeword and the message. So, in effect, the codeword can be written as $\(n, k\) = \(255-111, 239-111\) = \(144, 128\)$. Which means our message is **16 Bytes** long, with **2 Bytes** of redundancy appended at the end.
+
+
 
 <h2>MATLAB Section</h2>
 
