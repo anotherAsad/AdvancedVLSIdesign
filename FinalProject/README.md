@@ -135,7 +135,7 @@ From here on, one can generate **timing, area and power** reports. The steps to 
 
 Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show only the reports of the tough case: the parallel BCH decoder:
 
-![graph](./Pictures/SynopsysDesignCompiler/Broadcast/parallelBCHdecoder_2pipeline.PNG)
+![graph](./Pictures/SynopsysDesignCompiler/parallelBCHdecoder_2pipeline.PNG)
 
 
 <h2>Analysis and Conclusion</h2>
