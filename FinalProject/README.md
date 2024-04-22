@@ -19,8 +19,11 @@ BCH codes are defined over length $n = 2^m - 1$, where $m$ is the extent of the 
 
 To keep the decode latency predictable and low, and to model a system that compares with **IBM's Chipkill**, I have chosen a DEC-TED (Double Error Correct, Triple Error Detect) BCH code that works at a **sub-cacheline granularity**. For this code, $m=8$. Consequently, the code is defined as a BCH code of $\(n, k\) = \(255, 239\)$.
 
-Since the $\(n, k\) = \(255, 239\)$ code does not have a message or codeword length divisible by 8, I have chosen to drop $111$ Most Significant Bits of both the codeword and the message. So, in effect, the codeword can be written as $\(n, k\) = \(255-111, 239-111\) = \(144, 128\)$. Which means our message is **16 Bytes** long, with **2 Bytes** of redundancy appended at the end.
+Since the $\(n, k\) = \(255, 239\)$ code does not have a message or codeword length divisible by 8, I have chosen to drop $111$ Most Significant Bits of both the codeword and the message. So, in effect, the codeword can be written as $\(n, k\) = \(255-111, 239-111\) = \(144, 128\)$. Which means our message is going to be **16 Bytes** long, with **2 Bytes** of redundancy appended at the end.
 
+This dropping of MSbits does not change the encoding or decodig algorithm at all. In fact, this results in lesser physical resource consumption, and smaller encode and decode lengths, which is an advantage. Additionally, this also allows for a native way of decode failure detection: e.g. for triple error, or more than that, if the corrected codeword has a bit flipped from the truncated MSbits, we know that the error correction process has faced a catastrophic failure.
+
+Finally, I use **16 × 4** such message/code pairs to get a total message length of **64 Bytes**, and a total codeword length of **18 × 4 = 72 Bytes**. This means we can correct a total of **2*4 = 8** bits, albeit they must be distributed over 4 different blocks, with each block ensuring 2 bits worth of error correction.
 
 
 <h2>MATLAB Section</h2>
