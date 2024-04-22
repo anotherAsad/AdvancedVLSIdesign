@@ -1,7 +1,7 @@
-`define M 4
-`define N (2**`M-1)			// 15
-`define K 7					// message size
-`define dropped_MSB 0
+`define M 8
+`define N (2**`M-1)			// 255
+`define K 239					// message size
+`define dropped_MSB 111
 
 function [3:0] field_modulo(input [7:0] inp);
 	if(inp >= 2*`N)

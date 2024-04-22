@@ -36,155 +36,40 @@ Below is the screenshot of the MATLAB DEC-TED BCH decoder in action:
 
 ![graph](./Pictures/MATLAB/MatlabSim.PNG)
 
-<h3>RTL Design</h3>
+<h2>RTL Design</h2>
 
-The core philosophy of design for low latency implemenation is to unroll the operation in RTL, and then use re-timing to meet the clock frequency constraints.
+The core philosophy of design for low latency implemenation is:
 
-Traditionally, BCH codecs are woefully serial machines.
+1. Unfold the serial operation in RTL, and then use re-timing in **Synopsys Design Compiler** to meet the clock frequency constraints.
 
-![graph](./Pictures/MATLAB/fvtool.PNG)
+2. Make the common case fast: I have manually accelerated the cases of single error, and zero error. For the unlikely case of 2 errors, I have not unfolded the circuitry (**Chien Search Module**) that will not be used very often anyways.
 
-As can be seen, the response is that of an equiripple low-pass filter, with stop-band attenuation of the 80 dB, and requisite transition region width of 0.03 $\pi$ rad/sample.
+Traditionally, BCH codecs are woefully serial machines. The latency of an encoder is usually $k$ clock cycles. For our case that would be **128 cycles** or **128 ns** at a **1 GHz** clock. Using unfolding and re-timing, I was able to get an **8 deep** pipeline that meets **1 GHz** clock constraints. This means a latency of just **8 ns**, which is superior by a factor of **16**.
 
-<h3>Filter Quantization</h3>
+Similarly, a serial decoder takes $n$ clock-cycles at best (assuming 0 or 1 errors), i.e. a latency of **144 ns**. With unfolding, I got the best case latency of only **2 ns**. That's better by a factor of **72**.
 
-The absolute maximum value for filter coefficients (the top of the $sinc$ function, i.e. the value in the middle) was **0.2069**. Considering this, a fixed-point representation format of signed $Q1.15$ was chosen. This means that the coefficients will be stored in 16-bit numbers. 1 bit will be used to represent the sign, and 15 bits will be used to represent the fractional part.
+<h2>RTL Simulation</h2>
 
-The post quantization frequency response is given in the following figure:
+<h3>Encoder Simulation</h3>
 
-![graph](./Pictures/MATLAB/freqz.PNG)
+I have simulated the design using iVerilog and GTKwave. Below is the simulation of encoders (serial and parallel in comparison):
 
-The top figure shows the magnitude response, while the bottom figure shows the phase response. The *blue* traces represent the original/un-quantized filter response, whereas the *orange* trace shows the post quantization response. As can be seen, quantization impacts the stop-band: the response is no longer perfectly equiripple, and the stop-band attenuation is no more below the stipulated 80 dB - it now goes only as low as around 74 dB.
+![graph](./Pictures/GTKwave/BCHencoder.PNG)
 
-<h4></h4>
+To showcase the results in a single this simulation has a more manageable codeword and message length: $\(n, k\) = \(15, 7\). As can be seen, the parallel encoder (in purple) is ready quite before the serial encoder, and both output the correct systematic codeword of `40E8`.
 
-The MATLAB script in the file `code.m` was used to generate the filter, quantize it, display the filter impulse response, and dump the filter coefficients for verilog consumption.
+<h3>Decoder Simulation - Double Error</h3>
 
-<h2>FIR implementations in Verilog HDL</h2>
+_Serial Decoder_:
 
-One could think of many ways to implement FIR filters in hardware. I have implemented the given low-pass FIR filter in the following flavors:
+![graph](./Pictures/GTKwave/BCHdecoder_serial_2Err.PNG)
 
-1. **Direct Form**: *The naive design. Uses a massive adder to sum up all delayed multiplication products. This massive adder adds 204 products combinationally. Results in an atrociously long critical path*.
-2. **Pipelined Direct Form**: _The adder from the above design is pipelined: It is broken down logarithmically, with every further stage requiring half or so number of adders than the last one._
-3. **Broadcast Form**: _The FIR filter is expressed in a form which is naturally pipelined, and uses a low resource count. The input samples are **broadcast** to all the multipliers at once._
-4. **Broadcast Form with Fine Grain Pipelining**: _The multipliers in broadcast form are finegrain-pipelined._
-5. **Symmetric Broadcast Form**: _Since the coefficients of a low-pass filter are symmetric around the y-axis, half the multiplications in broadcast form are redundant. We can exploit this symmetry and reduce the multiplier count by half, since any two multipliers at an equal distance from the middle will have the same output._
-6. **L2 Parallel**: _Reduced complexity L2 parallel implementation._
-7. **L2 Parallel**: _Reduced complexity L3 parallel implementation._
 
-Given below are the design block diagrams of different FIR implementations. Each implementation has a corresponding verilog file with the same or similar name:
+_Parallel Decoder_:
 
-<h3>1. Direct Form</h3>
+![graph](./Pictures/GTKwave/BCHdecoder_parallel_2Err.PNG)
 
-This is the most naive form, derived from the convolution expression of an FIR. As can be seen in the figure, this implementation needs a huge adder, which combinationally adds the outputs of all the multipliers. This results in a horribly long critical path.
-
-![graph](./Pictures/Drawings/DirectForm_Original.png)
-
-<h3>2. Pipelined Direct Form</h3>
-
-This implementation breaks down the slow adder from the above implementation to a log-pipelined adder. Every stage adds only two operands, and passes on the result to the next stage. This results in a total adder count of `FILTER_SIZE-1`. These pipelined stages help reduce the critical path.
-
-A useful tip is to limit the log-pipelining stages to such an extent that the adder critical path is broken down into a path that is _just_ shorter than the second worst critical path. Any further pipelining will not help in critical path propagation delay reduction, but still consume area/cell resources.
-
-Through experimentation, I found that 6 combinational adders at the final stage do not form the critical path. This is reflected in the verilog code.
-
-![graph](./Pictures/Drawings/DirectForm_pipelined.png)
-
-<h3>3. Broadcast Form</h3>
-
-The broadcast representation of an FIR filter is inherently pipelined. It also uses less delay elements in comparison to pipelined direct form. The block diagram is given below:
-
-![graph](./Pictures/Drawings/broadcast_fir_noFG.png)
-
-<h3>4. Broadcast Form with Fine-grained Pipelining</h3>
-
-Supports additional, 1 stage fine-grained pipelining between adders and multipliers.
-
-![graph](./Pictures/Drawings/broadcast_fir.png)
-
-<h3>5. Symmetric Broadcast Form</h3>
-
-An equiripple low-pass FIR filter is symmetric around the y-axis, i.e., `h[n] == h[FILTER_SIZE-n-1]`. This means that the results of multiplications are also symmetric around the center of the broadcast FIR. We can use this symmetry to eliminate half of the redundant FIRs.
-
-The block diagram of a modified broadcast FIR is shown below:
-
-![graph](./Pictures/Drawings/broadcast_fir_symmetric.png)
-
-The symmetry exploitation only works for non-parallel implementations, because in parallel implementations, the coefficients of subfilters (decomposed filters H0, H1, H2 etc.) are not symmetric.
-
-<h3>6. L2 Parallel Form</h3>
-
-The L2 parallel form is the reduced-complexity parallel implementation of the given filter. It employs filter decomposition and clever recombination to achieve a parallel implementation capable of _2x_ throughput of the broadcast form, while using around _1.5x_ filter hardware resources.
-
-One feature of note: The L2 parallel design uses two clocks; one for processing, and one for serialization/de-serialization of inputs and outputs. The ser-des clock has twice the frequency to keep the filter fed at all times.
-
-Below is the block-diagram I used as a reference to implement the L2 parallel design:
-
-![graph](./Pictures/Drawings/L2.PNG)
-
-<h3>7. L3 Parallel Form</h3>
-
-The L3 frequency works essentially on the same principle as L3. It can give _3x_ throughput while using _2x_ filter resources (The L3 implementation has 6 filters, with each having a length of 1/3 of the original).
-
-The L3 system is also fed using a _3x_ faster clock that is used for serialization and de-serialization of the incoming/outgoing data. The internal core works in parallel at a slower clock.
-
-Below is the block-diagram I used as a reference to implement the L2 parallel design:
-
-![graph](./Pictures/Drawings/L3.PNG)
-
-Since both L2 and L3 parallel designs use **broadcast FIR filters** as their basic building blocks, one must make sure that the filter coefficients are passed on in the inverted order (i.e. `h[0]` goes to the last multiplier, and `h[N-1]` goes to the first multiplier). Otherwise, filter recombination is incorrect and will produce wrong results.
-
-$Note:$ The L2 and L3 parallel implementations use the **pipelined, broadcast FIR implementations** for their internal subfilters.
-
-<h3>Avoiding Overflows in Filter Design</h3>
-
-The following points explain my rationale in choosing output bit-widths to avoid overflows:
-
-- As stated in the MATLAB section, the filter coefficients are stored in signed $Q1.15$ fixed-point format, and need 16-bits each.
-- Given that every input `x[n]` is also constrained between $-0.999$ and $+0.999$, we can use the same signed $Q1.15$ format to represent inputs.
-- This means that every multiplication (product of 2 signed 16-bit numbers in $Q1.15$ format) will occupy 32-bit, and have a $Q2.30$ as format. Both of the two non-fractional bits represent sign bit. So we have 31 bits of information at the output of each multiplier.
-- Since we have a $204$ tap filter, we need to perform $204$ additions on the multiplication outputs.
-- Every 2-operand addition has the potential to add 1 more bit to the output, given that both operands are max representable values in the given fixed-point format.
-- Since we can breakdown the $204$ additions into a log-tree with 8 steps, we need 8 more fractional bits to avoid overflow. This is corroborated by the fact that since our max multiplication output is $~0.9999$, 204 such additions will result in something around $203.999$, which needs 8 non-fractional bits.
-- So to avoid overflow, the final adder output must have at least 8 non-fractional bits.
-- In the interest of saving resources, we can drop the lower, fractional bits of multipliers, and translate the q-format from $Q2.30$ to $Q1.15$ at a moderate precision loss.
-- Then, the required final Q-format at the adder outputs is $Q9.15$, and needs 24-bits.
-
-
-<h2>Testbench Simulation Results</h2>
-
-For simulation of the FIR implementations, I have used **iverilog**, in conjunction with **GTKwave**. The testbench used for simulations instantiates all pertinent FIR implementations, and passes the same input data to them. The outputs can thus be compared side-by-side.
-
-The simulation testbench uses three clocks:
-
-1. `clk` is used as the main processing clock for all FIR implementations.
-2. `clk_2x` is used to serialize/deserialize data for **L2 parallel** implementation.
-3. `clk_3x` is used to serialize/deserialize data for **L3 parallel** implementation.
-
-All three clocks are in phase.
-
-<h3>Post Simulation Waveform</h3>
-
-The following figure shows the post-simulation waveform:
-![graph](./Pictures/GTKwave/Comprehensive.PNG)
-
-This waveform shows the response of all the different FIR implementations when a single sample, impulse input is passed on to it. Description of the above waveform is as follows:
-
-1. Just after the marker, a single sample of input, representing **~+1** in $Q1.15$ is passed.
-2. In the violet _baseline_ traces, we can see the output of different non-parallel implementations of the FIR (e.g. direct form, log_pipelined direct_form, broadcast, broadcast symmetric etc). You can see that all the output samples have the same order for all the FIR implementations. They agree with each other, and also agree with the matlab filter coefficients. The **log-pipelined direct form implementation** lags quite a bit. This is due to the extra steps needed for addition in the implementation.
-3. The next trace is the _re-serialized_ output of the **L2 parallel** implementation. It is in orange, and has double the data rate as compared to non parallel implementations.
-4. In blue, we have the  _re-serialized_ output of the **L3 parallel** implementation.The data rate is 3x, and every output sample arrives at the rising edge of the `clk_3x` ser-des clock.
-5. In `Parallel_L2` section, we have the serialized output in blue; and the original, parallel output in orange. As can be seen, the parallel output is at the lower clock rate. Also, read from _top to bottom_, `data_out_0` and `data_out_1` form the reserialized output shown just above.
-6. In the `Parallel_L3` section, again, the serialized output is in blue. The 3-parallel output is in orange. From top to bottom, the outputs correspond to $y(3k)$, $y(3k+1)$ and $y(3k+2)$. Again the post serialization output agrees with the parallel output, and the output of other FIRs.
-
-
-<h3>Analog Waveform</h3>
-
-To show the veracity of implementations, the analog representation of the filter responses is given below. The input sample is a digital impulse. The outputs of 3 FIRs (broadcast non-parallel, L2 parallel and L3 parallel) are shown in violet, orange and green.
-
-![graph](./Pictures/GTKwave/Analog.PNG)
-
-As can be seen, all outputs are $sinc$ functions, which correspond to $rect$s in the frequency domain, i.e. **Low-pass filters**. The outputs of parallel filters are _squished_ by a factor of 2 and 3 respectively, because they are re-serialized at higher clocks.
+Again, the parallel Decoder emits its results much earlier.
 
 <h2>Synthesis using Synopsys Design Compiler</h2>
 
@@ -234,7 +119,9 @@ I have been using the following steps to compile my FIR implementations:
    report_port
    ```
 5. Check Design. Use `Design -> Check Design`.
-6. Compile Design. USe `Design -> Compile Design`.
+6. Compile Design. USe `Design -> Compile Design Ultra`. The Ultra option allows for aggressive `re-timing`. This is shown in the picture below:
+
+![graph](./Pictures/SynopsisDesignCompiler/retime.PNG)
 
 <h3>Steps for Report Generation</h3>
 
@@ -244,64 +131,16 @@ From here on, one can generate **timing, area and power** reports. The steps to 
 2. Use `Design -> Report Area` to generate an area report. Area is reported in terms of cells used.
 3. Use `Design -> Report Power` to generate power estimation reports.
 
-<h2>Post-synthesis Timing and Resource/Power Usage Reports</h2>
+<h2>Post-synthesis Timing Reports</h2>
 
-Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show the **screenshots** of only one designs here. For the rest, I will summarize the results in a table at the end of this section.
+Screenshots of post-synthesis/post-compilation reports for different designs can be found in the directory `Pictures/SynopsysDesignCompiler`. In the interest of brevity, I will show only the reports of the tough case: the parallel BCH decoder:
 
-<h3>Screenshots Broadcast form FIR reports</h3>
-
-<h4>Timing Report:</h4>
-
-![graph](./Pictures/SynopsysDesignCompiler/Broadcast/TimingReport.PNG)
-
-The critical path (highlighted) is due to a multiplier, and has a propogation delay of $5.77 ns$. The target clock period is $40 ns$, corresponding to $25 MHz$ frequency. The slack is $34.47 ns$. Which means that this design can run at the max clock frequency of about $173 MHz$.
-
-<h4>Area Report:</h4>
-
-![graph](./Pictures/SynopsysDesignCompiler/Broadcast/AreaReport.PNG)
-
-Total cell area is 142251 units. Net area in mm^2 is undefined, because I haven't specified pin-out details like wireloads etc.
-
-<h4>Power Report:</h4>
-
-![graph](./Pictures/SynopsysDesignCompiler/Broadcast/PowerReport.PNG)
-
-Estimated power consumption is around $4 mW$. Of which, around $3.274 mW$ are accounted for as dynamic power consumption.
-
-<h3>Comparison Table for Different Implementations</h3>
-
-This section concisely compares all the FIR implementations on various metrics.
-
-Given below is a table that compares the timing, power and area reports for all our designs:
-
-![graph](./Pictures/SynopsysDesignCompiler/ReportTable.PNG)
-
-The results seem more or less expected. A detailed analysis on the results of this table are given in the next section.
-
-<h2>Conclusion</h2>
-
-From the table above, one can draw the following conclusions:
-
-<h3>Timing Analysis</h3>
-
-1. In terms of timing, the **Direct Form** implementation is the worst design. The slack is zero, which means that despite all the optimizations, the design _just_ meets the timing constraints.
-2. The **log-pipelined** direct form design is the best in terms of timing. It has a lot of time budget, i.e. a slack of $36.25 ns$. This is also expected, since it has a lot of hand-tuned optimizations. Moreover, the design is uniquely amicable to compile-time re-timing. The design compiler must have fine-grained pipelined the multipliers from the extra budget of log-pipelined adders.
-3. The broadcast designs, due to their natural pipelining, exhibit high max operating frequencies. The additional fine-grained pipelining also helps in improving max operating frequency, but this comes at the cost of around $1.6x$ more area consumption.
-4. The symmetry exploiting design has a similar timing performance to the broadcast design. This means that the bottleneck is not the redundant multipliers.
-5. Both **L1** and **L2** parallel designs have similar max operating frequency, but have 2x and 3x datarate respectively. Both of them are based off of finegrain pipelined broadcast design.
-
-<h3>Power Analysis</h3>
-
-1. All designs consume around 80% of the net power as dynamic power.
-2. It seems like registers consume a lot of power, since designs with lower register count have lower power consumption (Compare pipelined and non-pipelined broadcast design).
-3. Due to symmetry exploitation, there is a **significant reduction in net power consumption**. This means that the redundant multipliers, although not impacting the critical path, were using up a lot of power.
-4. Due to large resource count, the $L2$ and $L3$ parallel designs seem power hungry. But I can't understand why their power consumption is so much higher than the base design.
-
-<h3>Area Analysis</h3>
-
-1. The direct form, with its enormous combinational adder, has the largest real estate consumption.
-2. After symmetry exploitation, the area reduces by around $20\%$ due to lesses multiplier count.
-3. Most interestingly, the **parallel L2** design has $1.6x$ more area than the baseline design. This agrees remarkably well with the first-principle extimation of $1.5x$, because L2 design is supposed to use 3 filters of 1/2 of the original length, i.e., $1.5x$ the original filter complexity.
-4. Similarly, the **parallel L3** design uses $2.2x$ more area than the base line design. The first-principle estimation was $2x$, because we have 6 sub-filters, each with 1/3 of the original length.
+![graph](./Pictures/SynopsysDesignCompiler/Broadcast/parallelBCHdecoder_2pipeline.PNG)
 
 
+<h2>Analysis and Conclusion</h2>
+
+1. The BCH enoder/decoder achieved by unfoling and retiming exhibit very low latencies for commonly faced cases.
+2. The Chien Search algorithm, while unfoldable, is so rarely invoked (multiple errors), that one is better off in keeping it serial.
+3. For single error cases, one does not need to do complex searches, as the location of the error can be deduced with simple logarithm look-ups. This allows for low-latency decoding.
+4. Synopsys Design Compiler's `Compile Ultra` option is a hidden gem. It can optimize the placements to meet unbelievably strict targets.
