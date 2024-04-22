@@ -7,9 +7,9 @@ This is the report on Low Latency BCH encoder design project. It showcases:
 
 **Note**: Use `gns.ps1` script to simulate the design.
 
-<h2>BCH Codes</h2>
+<h2>BCH Code Parameters</h2>
 
-_keywords_: `DEC-TED`, `Truncated Code`, `Galois Field`, 
+_keywords_: `DEC-TED`, `Truncated Code`, `Galois Field`, `Chipkill`
 
 BCH codes are a class of linear error correction codes that use polynomial arithmetic over a _Galois Field_ for encoding and decoding. The details of the encoding/decoding theory are in the accompanying [presentation](./presentation.pdf).
 
@@ -28,21 +28,19 @@ Finally, I use **16 × 4** such message/code pairs to get a total message length
 
 <h2>MATLAB Section</h2>
 
-_keywords:_ `FIR filter design`, `Q-formats`, `quantization noise`
+_keywords:_ `MATLAB Simulation`, `Polynomial Lookup Generation`
 
-MATLAB's `designfilt` tool was used to design a filter with required properties, i.e., with a transition region of **0.2 $\pi$ to 0.23 $\pi$ rad/sample**, and a **stop-band attenuation of 80 dB**.
+MATLAB was used to craft a model for RTL implementation, and to generate Galois Field look-up tables for **log** and **power** operations, which were used in RTL. The source filed are attached herewith, and have **.m** extenstions.
 
-<h3>Filter Details</h3>
+Below is the screenshot of the MATLAB DEC-TED BCH decoder in action:
 
-The filter was generated using the equiripple design method. The command used to generate the filter is as follows:
+![graph](./Pictures/MATLAB/MatlabSim.PNG)
 
-```MATALAB
-lpf_equi = designfilt('lowpassfir', 'PassbandFrequency', .2, 'StopbandFrequency', 0.23, 'PassbandRipple', 0.308, 'StopbandAttenuation', 80, 'DesignMethod', 'equiripple');
-```
+<h3>RTL Design</h3>
 
-For the given constraints, a decent equiripple design takes more than 100 taps. For low passband ripple, and for ease of decomposition during L2 and L3 parallel filter design, I have chosen to implement a filter with **204 taps**.
+The core philosophy of design for low latency implemenation is to unroll the operation in RTL, and then use re-timing to meet the clock frequency constraints.
 
-The filter impulse response, extracted using `fvtool` utility in MATLAB, is given below:
+Traditionally, BCH codecs are woefully serial machines.
 
 ![graph](./Pictures/MATLAB/fvtool.PNG)
 
